@@ -16,6 +16,7 @@ WriteMakefile(
         'Test::More' => 0,
 	'Email::Valid' => 0.187,
 	'Email::Address' => 1.893,
+	'String::Validator::Common' => 0.93,
 	'Net::DNS' => 0,
 	'Net::Domain::TLD' => 0,
 	'Regexp::Common' => 2011121001,

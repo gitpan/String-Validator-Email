@@ -7,11 +7,11 @@ use String::Validator::Common ;
 use Regexp::Common qw /net/;
 #use Net::DNS;
 
-our $VERSION = '0.93';
+our $VERSION = '0.94';
 
 =head1 VERSION
 
-Version 0.93
+Version 0.94
 
 =cut
 
@@ -164,7 +164,7 @@ for returning to an end user.
 =head1 ToDo
 
 The major TO DO items are to fix the the call to (or replace) the Email::Valid mx method, return an Email::Address object and to use it to create methods for returning information
-from an extended mail string like: jane.brown@domain.com.
+from an extended mail string like: Jane Brown <jane.brown@domain.com>.
 
 =head1 AUTHOR
 

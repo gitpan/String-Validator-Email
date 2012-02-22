@@ -23,5 +23,6 @@ requires:
   Net::DNS: 0
   Net::Domain::TLD: 0
   Regexp::Common: 2011121001
+  String::Validator::Common: 0.93
   Test::More: 0
-version: 0.93
+version: 0.94
