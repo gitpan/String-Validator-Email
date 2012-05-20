@@ -7,11 +7,11 @@ use String::Validator::Common ;
 use Regexp::Common qw /net/;
 #use Net::DNS;
 
-our $VERSION = '0.94';
+our $VERSION = '0.97';
 
 =head1 VERSION
 
-Version 0.94
+Version 0.97
 
 =cut
 
