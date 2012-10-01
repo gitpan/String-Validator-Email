@@ -14,8 +14,8 @@ WriteMakefile(
     PL_FILES            => {},
     PREREQ_PM => {
         'Test::More' => 0,
-	'Email::Valid' => 0.187,
-	'Email::Address' => 1.893,
+	'Email::Valid' => 0.190,
+	'Email::Address' => 1.896,
 	'String::Validator::Common' => 0.93,
 	'Net::DNS' => 0,
 	'Net::Domain::TLD' => 0,

@@ -1,5 +1,7 @@
 Revision history for String-Validator-Email
 
+0.98	30 September 2012
+	MXCheck Method is working because it now calls Net::DNS directly.
 0.97	May 20, 2012
 	A test os failing with latest Email::Valid 
 	I don't have time to work on module so I just 

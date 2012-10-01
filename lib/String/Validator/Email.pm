@@ -5,19 +5,17 @@ use strict;
 use warnings;
 use String::Validator::Common ;
 use Regexp::Common qw /net/;
-#use Net::DNS;
+use Net::DNS;
+use Email::Valid;
+use Email::Address;
 
-our $VERSION = '0.97';
+our $VERSION = '0.98_01';
 
 =head1 VERSION
 
-Version 0.97
+Version 0.98
 
 =cut
-
-#use Regexp::Common ;
-use Email::Valid;
-use Email::Address;
 
 sub new {
     my $class = shift ;
@@ -29,6 +27,7 @@ sub new {
                 { $self->{ max_len } = 64 ; }
 	# allow_ip wont work with fqdn or tldcheck
 	if ( $self->{ allow_ip } ) {
+	    $self->{ mxcheck } = 0 ; 
 		$self->{ fqdn } = 0 ;
 		$self->{ tldcheck } = 0 ;
 		}
@@ -42,6 +41,11 @@ sub new {
 	unless( defined $self->{ tldcheck } ) {
         $switchhash{ '-tldcheck' } = 1 }
     $self->{ switchhash } = \%switchhash ;
+    if( $self->{ mxcheck } ) {
+        $self->{ fqdn } = 1 ; #before mx, must pass fqdn.
+        $self->{ NetDNS } = Net::DNS::Resolver->new;
+        }
+        
     bless $self, $class ;
     return $self ;
 }
@@ -49,7 +53,7 @@ sub new {
 # Email::Valid has very terse error codes.
 # Not an OO method must use &
 sub _expound {
-    my $errors = shift ;
+    my $errors = shift || '';
     my $string = shift ;
     my $expounded = '' ;
     if ( $errors =~ m/fqdn/ ) {
@@ -91,19 +95,70 @@ sub Check{
 		unless ( $self->{ allow_ip } ) {
 			$self->_rejectip() }
 		}
-# MXCheck isn't working.
-#     if ( $self->{ mxcheck } ) {
-# 		if ( $self->{ error } == 0 ) {
-#          $switchhash{ '-mxcheck'  } = 1 ;
-#          eval {
-#             Email::Valid->address( %switchhash );
-#             } ;
-#          if ( $@ ne '1' ) { $self->IncreaseErr( "MXCheck Failed $@" ) }
-#         } }
+	# Need maildomain for mxcheck.
+	( my $discard, $self->{maildomain} ) = split( /\@/, $self->{ string } );
+    $self->{maildomain} =~ tr/\>//d ; #clean out unwanted chars.
+#MXCheck isn't working.
+    if ( $self->{ mxcheck } ) {
+		if ( $self->{ error } == 0 ) {
+		    my $res = $self->{ NetDNS };
+		    unless ( mx( $res, $self->{ maildomain } ) ) {
+                $self->IncreaseErr( "No MX for $self->{ maildomain}" ) ;
+            $self->{ expounded } = &_expound(
+                "$self->{ string } : maildomain $self->{ maildomain} " .
+                "has not published a MailServer in Public DNS.") ;
+		    }    
+		}
+    }
+         # $switchhash{ 'mxcheck'  } = 0 ;
+         # eval {
+            # Email::Valid->address( %switchhash );
+            # } ;
+         # if ( $@ ne '1' ) { 
+             # $self->IncreaseErr( "MXCheck Failed $@" ) ;
+             # my $details = $Email::Valid::Details || "No Details for MX Failure" ;
+             # $self->{ expounded } .= "MX Check Failure: $details" ;
+           # }
 return $self->{ error } ;
 }
 
+=pod 
 
+The mxcheck from email-valid.
+
+# Purpose: Check whether a DNS record (A or MX) exists for a domain.
+sub mx {
+  my $self = shift;
+  my %args = $self->_rearrange([qw( address )], \@_);
+
+  my $host = $self->_host($args{address}) or return $self->details('mx');
+
+  $self->_select_dns_method unless $DNS_Method;
+
+  if ($DNS_Method eq 'Net::DNS') {
+    print STDERR "using Net::DNS for dns query\n" if $Debug;
+    return $self->_net_dns_query( $host );
+  } elsif ($DNS_Method eq 'nslookup') {
+    print STDERR "using nslookup for dns query\n" if $Debug;
+    return $self->_nslookup_query( $host );
+  } else {
+    croak "unknown DNS method '$DNS_Method'";
+  }
+}
+NET DNS mx example.
+  use Net::DNS;
+  my $name = "example.com";
+  my $res  = Net::DNS::Resolver->new;
+  my @mx   = mx($res, $name);
+
+  if (@mx) {
+      foreach $rr (@mx) {
+          print $rr->preference, " ", $rr->exchange, "\n";
+      }
+  } else {
+      warn "Can't find MX records for $name: ", $res->errorstring, "\n";
+  }
+=cut
 
 sub Expound {
     my $self = shift ;
