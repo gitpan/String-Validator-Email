@@ -9,7 +9,7 @@ use Net::DNS;
 use Email::Valid;
 use Email::Address;
 
-our $VERSION = '0.98_01';
+our $VERSION = '0.98_02';
 
 =head1 VERSION
 
@@ -67,6 +67,10 @@ sub _expound {
         $expounded .=
         'The TLD (Top Level Domain) is not recognized.' ;
         }
+    if ( $errors =~ m/mx/ ) {
+    	$expounded .= "Mail Exchanger for $string " .
+            "is missing from Public DNS. Mail cannot be delivered." ;
+    	}
     return $expounded ;
 }
 
@@ -98,67 +102,18 @@ sub Check{
 	# Need maildomain for mxcheck.
 	( my $discard, $self->{maildomain} ) = split( /\@/, $self->{ string } );
     $self->{maildomain} =~ tr/\>//d ; #clean out unwanted chars.
-#MXCheck isn't working.
     if ( $self->{ mxcheck } ) {
 		if ( $self->{ error } == 0 ) {
 		    my $res = $self->{ NetDNS };
 		    unless ( mx( $res, $self->{ maildomain } ) ) {
-                $self->IncreaseErr( "No MX for $self->{ maildomain}" ) ;
-            $self->{ expounded } = &_expound(
-                "$self->{ string } : maildomain $self->{ maildomain} " .
-                "has not published a MailServer in Public DNS.") ;
+                $self->IncreaseErr( "MX" ) ;
+                $self->{ expounded } = 
+                    &_expound( 'mx', $self->{ maildomain} ) ;
 		    }    
 		}
     }
-         # $switchhash{ 'mxcheck'  } = 0 ;
-         # eval {
-            # Email::Valid->address( %switchhash );
-            # } ;
-         # if ( $@ ne '1' ) { 
-             # $self->IncreaseErr( "MXCheck Failed $@" ) ;
-             # my $details = $Email::Valid::Details || "No Details for MX Failure" ;
-             # $self->{ expounded } .= "MX Check Failure: $details" ;
-           # }
 return $self->{ error } ;
 }
-
-=pod 
-
-The mxcheck from email-valid.
-
-# Purpose: Check whether a DNS record (A or MX) exists for a domain.
-sub mx {
-  my $self = shift;
-  my %args = $self->_rearrange([qw( address )], \@_);
-
-  my $host = $self->_host($args{address}) or return $self->details('mx');
-
-  $self->_select_dns_method unless $DNS_Method;
-
-  if ($DNS_Method eq 'Net::DNS') {
-    print STDERR "using Net::DNS for dns query\n" if $Debug;
-    return $self->_net_dns_query( $host );
-  } elsif ($DNS_Method eq 'nslookup') {
-    print STDERR "using nslookup for dns query\n" if $Debug;
-    return $self->_nslookup_query( $host );
-  } else {
-    croak "unknown DNS method '$DNS_Method'";
-  }
-}
-NET DNS mx example.
-  use Net::DNS;
-  my $name = "example.com";
-  my $res  = Net::DNS::Resolver->new;
-  my @mx   = mx($res, $name);
-
-  if (@mx) {
-      foreach $rr (@mx) {
-          print $rr->preference, " ", $rr->exchange, "\n";
-      }
-  } else {
-      warn "Can't find MX records for $name: ", $res->errorstring, "\n";
-  }
-=cut
 
 sub Expound {
     my $self = shift ;
@@ -171,15 +126,11 @@ sub Expound {
 
 String::Validator::Email - Check if a string is an email address.
 
-
-
 =head1 SYNOPSIS
 
 String::Validator::Email is part of the String Validator Collection. It will
 check a string against any number of email validation rules, and optionally
 against a second string (as in a confirmation box on a webform).
-
-String::Validator::Email is powered by Email::Valid.
 
 =head1 String::Validator Methods and Usage
 
@@ -201,8 +152,8 @@ String::Validator::Common for information on the base String::Validator Class.
 Important notes -- SVE uses Email::Valid, however, tldcheck is defaulted to on.
 The choice to turn tldcheck should be obvious. The fudge and local_rules
 options are specific to aol and compuserve, and are not supported.
-Finally mxcheck is not tried if there is already an error, at present
-mxcheck isn't working and is disabled.
+Finally mxcheck is not tried if there is already an error, since Email::Valid's 
+DNS check does not work, that is performed directly through Net::DNS.
 
 =head2 Expound
 
@@ -218,7 +169,7 @@ for returning to an end user.
 
 =head1 ToDo
 
-The major TO DO items are to fix the the call to (or replace) the Email::Valid mx method, return an Email::Address object and to use it to create methods for returning information
+The major TO DO items are to replace Email::Valid methods, return an Email::Address object and to use it to create methods for returning information
 from an extended mail string like: Jane Brown <jane.brown@domain.com>.
 
 =head1 AUTHOR

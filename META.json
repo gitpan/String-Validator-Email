@@ -34,14 +34,14 @@
          "requires" : {
             "Email::Address" : "1.896",
             "Email::Valid" : "0.19",
-            "Net::DNS" : 0,
-            "Net::Domain::TLD" : 0,
+            "Net::DNS" : "0.68",
+            "Net::Domain::TLD" : "1.69",
             "Regexp::Common" : "2011121001",
-            "String::Validator::Common" : "0.93",
+            "String::Validator::Common" : "0.97",
             "Test::More" : 0
          }
       }
    },
    "release_status" : "testing",
-   "version" : "0.98_01"
+   "version" : "0.98_02"
 }

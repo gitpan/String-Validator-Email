@@ -6,7 +6,7 @@ README
 t/00-load.t
 t/11-length.t   
 t/21-options.t  
-t/23-string.t
+t/22-mx.t
 t/10-matches.t  
 t/20-default.t  
 t/23-string.t
