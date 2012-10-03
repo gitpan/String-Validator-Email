@@ -9,7 +9,7 @@ use Net::DNS;
 use Email::Valid;
 use Email::Address;
 
-our $VERSION = '0.98_02';
+our $VERSION = '0.98';
 
 =head1 VERSION
 

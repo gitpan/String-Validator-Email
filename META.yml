@@ -25,4 +25,4 @@ requires:
   Regexp::Common: 2011121001
   String::Validator::Common: 0.97
   Test::More: 0
-version: 0.98_02
+version: 0.98
